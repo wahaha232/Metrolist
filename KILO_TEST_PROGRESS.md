@@ -116,6 +116,25 @@ GitHub fork：`wahaha232/Metrolist`
 
 ## 在另一台電腦繼續
 
+### 一鍵測試腳本（不需要 Kilo）
+`scripts/kilo_remaining_tests.ps1` 直接用 adb 執行剩下的測試：
+- 多擊控制關閉後：單擊延遲、自訂映射是否繞過
+- 250ms / 700ms 點擊視窗邊界
+- App 重啟後設定是否保留
+- 首頁閒置 10 秒是否仍是 0 幀
+- 安裝/啟動 release APK，確認「耳機控制」頁面
+- 可選 `-Reboot`：手機重啟後持久化
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\kilo_remaining_tests.ps1
+# 指定 release APK 並測重啟：
+powershell -ExecutionPolicy Bypass -File scripts\kilo_remaining_tests.ps1 `
+  -ReleaseApk app\build\outputs\apk\foss\release\app-foss-arm64-v8a-release.apk -Reboot
+```
+
+腳本已做 PowerShell 語法檢查，但因為測試被暫停，尚未端到端執行過；UI 自動化失敗時會請你手動導航後按 Enter。
+測試結果會寫到 `test-results/remaining-tests-*.txt`。
+
 ### 需求
 - JDK 21（本機是 `D:\Android\jdk-21`）
 - Android SDK 37（`compileSdk = 37`）
