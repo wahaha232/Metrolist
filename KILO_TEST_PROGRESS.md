@@ -125,6 +125,15 @@ GitHub fork：`wahaha232/Metrolist`
 - 安裝/啟動 release APK，確認「耳機控制」頁面
 - 可選 `-Reboot`：手機重啟後持久化
 
+最簡單：下載 `scripts/run_kilo_tests.bat` 後直接雙擊（若同目錄沒有 PS1，BAT 會自動下載）。
+
+```bat
+run_kilo_tests.bat
+:: 指定 release APK 並測重啟：
+run_kilo_tests.bat -ReleaseApk app\build\outputs\apk\foss\release\app-foss-arm64-v8a-release.apk -Reboot
+```
+
+或直接跑 PowerShell：
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts\kilo_remaining_tests.ps1
 # 指定 release APK 並測重啟：
