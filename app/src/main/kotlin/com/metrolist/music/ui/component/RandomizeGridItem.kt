@@ -111,12 +111,15 @@ fun RandomizeGridItem(
                     .background(dotColor),
         )
 
-        // Loading Indicator overlay
-        Box(modifier = Modifier.alpha(loadingAlpha)) {
-            LoadingIndicator(
-                modifier = Modifier.size(48.dp),
-                color = MaterialTheme.colorScheme.onSecondaryContainer,
-            )
+        // Loading Indicator overlay. Only compose it while it can be seen: an alpha-0
+        // LoadingIndicator still runs its infinite animation and redraws the window every frame.
+        if (isLoading || loadingAlpha > 0.01f) {
+            Box(modifier = Modifier.alpha(loadingAlpha)) {
+                LoadingIndicator(
+                    modifier = Modifier.size(48.dp),
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                )
+            }
         }
     }
 }
