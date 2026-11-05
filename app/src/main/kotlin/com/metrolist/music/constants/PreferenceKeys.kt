@@ -62,6 +62,20 @@ val CropAlbumArtKey = booleanPreferencesKey("cropAlbumArt")
 val SeekExtraSeconds = booleanPreferencesKey("seekExtraSeconds")
 val PauseOnMute = booleanPreferencesKey("pauseOnMute")
 val ResumeOnBluetoothConnectKey = booleanPreferencesKey("resumeOnBluetoothConnect")
+val HeadsetControlsEnabledKey = booleanPreferencesKey("headsetControlsEnabled")
+val HeadsetClickWindowMsKey = intPreferencesKey("headsetClickWindowMs")
+val HeadsetDoubleClickActionKey = stringPreferencesKey("headsetDoubleClickAction")
+val HeadsetTripleClickActionKey = stringPreferencesKey("headsetTripleClickAction")
+val HeadsetLongPressActionKey = stringPreferencesKey("headsetLongPressAction")
+val HeadsetResumeWindowMinutesKey = intPreferencesKey("headsetResumeWindowMinutes")
+
+enum class HeadsetAction {
+    NONE,
+    PLAY_PAUSE,
+    NEXT,
+    PREVIOUS,
+}
+
 val KeepScreenOn = booleanPreferencesKey("keepScreenOn")
 val AlarmEnabledKey = booleanPreferencesKey("alarmEnabled")
 val AlarmHourKey = intPreferencesKey("alarmHour")

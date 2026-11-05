@@ -51,6 +51,13 @@ import com.metrolist.music.constants.AutoSkipNextOnErrorKey
 import com.metrolist.music.constants.AutoplayKey
 import com.metrolist.music.constants.DisableLoadMoreWhenRepeatAllKey
 import com.metrolist.music.constants.EnableGoogleCastKey
+import com.metrolist.music.constants.HeadsetAction
+import com.metrolist.music.constants.HeadsetClickWindowMsKey
+import com.metrolist.music.constants.HeadsetControlsEnabledKey
+import com.metrolist.music.constants.HeadsetDoubleClickActionKey
+import com.metrolist.music.constants.HeadsetLongPressActionKey
+import com.metrolist.music.constants.HeadsetResumeWindowMinutesKey
+import com.metrolist.music.constants.HeadsetTripleClickActionKey
 import com.metrolist.music.constants.HistoryDuration
 import com.metrolist.music.constants.KeepScreenOn
 import com.metrolist.music.constants.LoudnessLevel
@@ -214,6 +221,30 @@ fun PlayerSettings(
         ResumeOnBluetoothConnectKey,
         defaultValue = false
     )
+    val (headsetControlsEnabled, onHeadsetControlsEnabledChange) = rememberPreference(
+        HeadsetControlsEnabledKey,
+        defaultValue = true
+    )
+    val (headsetClickWindowMs, onHeadsetClickWindowMsChange) = rememberPreference(
+        HeadsetClickWindowMsKey,
+        defaultValue = 400
+    )
+    val (headsetDoubleClickAction, onHeadsetDoubleClickActionChange) = rememberEnumPreference(
+        HeadsetDoubleClickActionKey,
+        defaultValue = HeadsetAction.NEXT
+    )
+    val (headsetTripleClickAction, onHeadsetTripleClickActionChange) = rememberEnumPreference(
+        HeadsetTripleClickActionKey,
+        defaultValue = HeadsetAction.PREVIOUS
+    )
+    val (headsetLongPressAction, onHeadsetLongPressActionChange) = rememberEnumPreference(
+        HeadsetLongPressActionKey,
+        defaultValue = HeadsetAction.NONE
+    )
+    val (headsetResumeWindowMinutes, onHeadsetResumeWindowMinutesChange) = rememberPreference(
+        HeadsetResumeWindowMinutesKey,
+        defaultValue = 10
+    )
     val (keepScreenOn, onKeepScreenOnChange) = rememberPreference(
         KeepScreenOn,
         defaultValue = false
@@ -229,6 +260,60 @@ fun PlayerSettings(
 
     var showLoudnessLevelDialog by remember {
         mutableStateOf(false)
+    }
+
+    var showHeadsetDoubleClickDialog by remember {
+        mutableStateOf(false)
+    }
+
+    var showHeadsetTripleClickDialog by remember {
+        mutableStateOf(false)
+    }
+
+    var showHeadsetLongPressDialog by remember {
+        mutableStateOf(false)
+    }
+
+    if (showHeadsetDoubleClickDialog) {
+        EnumDialog(
+            onDismiss = { showHeadsetDoubleClickDialog = false },
+            onSelect = {
+                onHeadsetDoubleClickActionChange(it)
+                showHeadsetDoubleClickDialog = false
+            },
+            title = stringResource(R.string.headset_double_click_action),
+            current = headsetDoubleClickAction,
+            values = HeadsetAction.entries.toList(),
+            valueText = { headsetActionLabel(it) }
+        )
+    }
+
+    if (showHeadsetTripleClickDialog) {
+        EnumDialog(
+            onDismiss = { showHeadsetTripleClickDialog = false },
+            onSelect = {
+                onHeadsetTripleClickActionChange(it)
+                showHeadsetTripleClickDialog = false
+            },
+            title = stringResource(R.string.headset_triple_click_action),
+            current = headsetTripleClickAction,
+            values = HeadsetAction.entries.toList(),
+            valueText = { headsetActionLabel(it) }
+        )
+    }
+
+    if (showHeadsetLongPressDialog) {
+        EnumDialog(
+            onDismiss = { showHeadsetLongPressDialog = false },
+            onSelect = {
+                onHeadsetLongPressActionChange(it)
+                showHeadsetLongPressDialog = false
+            },
+            title = stringResource(R.string.headset_long_press_action),
+            current = headsetLongPressAction,
+            values = HeadsetAction.entries.toList(),
+            valueText = { headsetActionLabel(it) }
+        )
     }
 
     if (showAudioQualityDialog) {
@@ -1089,6 +1174,99 @@ fun PlayerSettings(
             )
         )
         Spacer(modifier = Modifier.height(16.dp))
+        Material3SettingsGroup(
+            title = stringResource(R.string.headset_controls),
+            items = buildList {
+                add(Material3SettingsItem(
+                    icon = painterResource(R.drawable.bluetooth),
+                    title = { Text(stringResource(R.string.headset_multi_click_enabled)) },
+                    description = { Text(stringResource(R.string.headset_multi_click_enabled_desc)) },
+                    trailingContent = {
+                        Switch(
+                            checked = headsetControlsEnabled,
+                            onCheckedChange = onHeadsetControlsEnabledChange,
+                            thumbContent = {
+                                Icon(
+                                    painter = painterResource(
+                                        id = if (headsetControlsEnabled) R.drawable.check else R.drawable.close
+                                    ),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(SwitchDefaults.IconSize)
+                                )
+                            }
+                        )
+                    },
+                    onClick = { onHeadsetControlsEnabledChange(!headsetControlsEnabled) }
+                ))
+                if (headsetControlsEnabled) {
+                    add(Material3SettingsItem(
+                        icon = painterResource(R.drawable.timer),
+                        title = { Text(stringResource(R.string.headset_click_window)) },
+                        description = {
+                            Column {
+                                Text(
+                                    stringResource(
+                                        R.string.headset_click_window_value,
+                                        headsetClickWindowMs
+                                    )
+                                )
+                                Slider(
+                                    value = headsetClickWindowMs.toFloat(),
+                                    onValueChange = {
+                                        onHeadsetClickWindowMsChange(it.roundToInt().coerceIn(250, 700))
+                                    },
+                                    valueRange = 250f..700f,
+                                    steps = 8
+                                )
+                            }
+                        }
+                    ))
+                    add(Material3SettingsItem(
+                        icon = painterResource(R.drawable.play),
+                        title = { Text(stringResource(R.string.headset_double_click_action)) },
+                        description = { Text(headsetActionLabel(headsetDoubleClickAction)) },
+                        onClick = { showHeadsetDoubleClickDialog = true }
+                    ))
+                    add(Material3SettingsItem(
+                        icon = painterResource(R.drawable.play),
+                        title = { Text(stringResource(R.string.headset_triple_click_action)) },
+                        description = { Text(headsetActionLabel(headsetTripleClickAction)) },
+                        onClick = { showHeadsetTripleClickDialog = true }
+                    ))
+                    add(Material3SettingsItem(
+                        icon = painterResource(R.drawable.play),
+                        title = { Text(stringResource(R.string.headset_long_press_action)) },
+                        description = { Text(headsetActionLabel(headsetLongPressAction)) },
+                        onClick = { showHeadsetLongPressDialog = true }
+                    ))
+                }
+                if (resumeOnBluetoothConnect) {
+                    add(Material3SettingsItem(
+                        icon = painterResource(R.drawable.timer),
+                        title = { Text(stringResource(R.string.headset_resume_window)) },
+                        description = {
+                            Column {
+                                Text(
+                                    stringResource(
+                                        R.string.headset_resume_window_value,
+                                        headsetResumeWindowMinutes
+                                    )
+                                )
+                                Slider(
+                                    value = headsetResumeWindowMinutes.toFloat(),
+                                    onValueChange = {
+                                        onHeadsetResumeWindowMinutesChange(it.roundToInt().coerceIn(1, 30))
+                                    },
+                                    valueRange = 1f..30f,
+                                    steps = 28
+                                )
+                            }
+                        }
+                    ))
+                }
+            }
+        )
+        Spacer(modifier = Modifier.height(16.dp))
     }
 
     TopAppBar(
@@ -1106,3 +1284,12 @@ fun PlayerSettings(
         }
     )
 }
+
+@Composable
+private fun headsetActionLabel(action: HeadsetAction): String =
+    when (action) {
+        HeadsetAction.NONE -> stringResource(R.string.headset_action_none)
+        HeadsetAction.PLAY_PAUSE -> stringResource(R.string.headset_action_play_pause)
+        HeadsetAction.NEXT -> stringResource(R.string.headset_action_next)
+        HeadsetAction.PREVIOUS -> stringResource(R.string.headset_action_previous)
+    }

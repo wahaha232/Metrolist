@@ -32,6 +32,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import androidx.datastore.preferences.core.Preferences
@@ -154,6 +155,7 @@ import com.metrolist.music.constants.PlayerVolumeKey
 import com.metrolist.music.constants.PreventDuplicateTracksInQueueKey
 import com.metrolist.music.constants.RememberShuffleAndRepeatKey
 import com.metrolist.music.constants.RepeatModeKey
+import com.metrolist.music.constants.HeadsetResumeWindowMinutesKey
 import com.metrolist.music.constants.ResumeOnBluetoothConnectKey
 import com.metrolist.music.constants.ScrobbleDelayPercentKey
 import com.metrolist.music.constants.ScrobbleDelaySecondsKey
@@ -301,6 +303,7 @@ class MusicService :
     private var reentrantFocusGain = false
     private var wasPlayingBeforeVolumeMute = false
     private var isPausedByVolumeMute = false
+    private var lastBluetoothDisconnectAt = 0L
 
     private var crossfadeEnabled = false
     private var crossfadeDuration = 5000f
@@ -588,11 +591,38 @@ class MusicService :
                     } == true
 
                 if (hasBluetooth) {
-                    if (dataStore.get(ResumeOnBluetoothConnectKey, false)) {
-                        if (player.playbackState == Player.STATE_READY && !player.isPlaying) {
+                    val resumeEnabled = dataStore.get(ResumeOnBluetoothConnectKey, false)
+                    if (resumeEnabled) {
+                        val windowMs = dataStore
+                            .get(HeadsetResumeWindowMinutesKey, 10)
+                            .coerceAtLeast(1) * 60_000L
+                        val disconnectedRecently = shouldResumeAfterBluetoothDisconnect(
+                            nowMs = SystemClock.elapsedRealtime(),
+                            disconnectedAtMs = lastBluetoothDisconnectAt,
+                            windowMs = windowMs,
+                        )
+                        if (disconnectedRecently &&
+                            player.playbackState == Player.STATE_READY &&
+                            !player.isPlaying
+                        ) {
                             player.play()
                         }
                     }
+                    // Consume the disconnect marker whether or not playback was resumed.
+                    lastBluetoothDisconnectAt = 0L
+                }
+            }
+
+            override fun onAudioDevicesRemoved(removedDevices: Array<out AudioDeviceInfo>?) {
+                super.onAudioDevicesRemoved(removedDevices)
+                val removedBluetooth =
+                    removedDevices?.any {
+                        it.type == AudioDeviceInfo.TYPE_BLUETOOTH_A2DP ||
+                            it.type == AudioDeviceInfo.TYPE_BLUETOOTH_SCO
+                    } == true
+
+                if (removedBluetooth && (player.isPlaying || player.playWhenReady)) {
+                    lastBluetoothDisconnectAt = SystemClock.elapsedRealtime()
                 }
             }
         }

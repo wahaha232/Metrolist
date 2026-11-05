@@ -7,13 +7,17 @@ package com.metrolist.music.playback
 
 import android.content.ContentResolver
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.view.KeyEvent
 import androidx.annotation.DrawableRes
+import androidx.core.content.IntentCompat
 import androidx.core.net.toUri
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
+import androidx.media3.common.Player
 import androidx.media3.exoplayer.offline.Download
 import androidx.media3.session.LibraryResult
 import androidx.media3.session.MediaLibraryService
@@ -33,6 +37,12 @@ import com.metrolist.innertube.models.filterExplicit
 import com.metrolist.innertube.models.filterVideoSongs
 import com.metrolist.music.R
 import com.metrolist.music.constants.AndroidAutoSearchLocalLimitKey
+import com.metrolist.music.constants.HeadsetAction
+import com.metrolist.music.constants.HeadsetClickWindowMsKey
+import com.metrolist.music.constants.HeadsetControlsEnabledKey
+import com.metrolist.music.constants.HeadsetDoubleClickActionKey
+import com.metrolist.music.constants.HeadsetLongPressActionKey
+import com.metrolist.music.constants.HeadsetTripleClickActionKey
 import com.metrolist.music.constants.HideExplicitKey
 import com.metrolist.music.constants.HideVideoSongsKey
 import com.metrolist.music.constants.MediaSessionConstants
@@ -54,6 +64,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
@@ -85,9 +96,71 @@ constructor(
     var toggleLibrary: () -> Unit = {}
     var addToTargetPlaylist: () -> Unit = {}
 
+    @Volatile
+    private var headsetSettings = HeadsetClickSettings()
+
+    private val headsetController = HeadsetMediaButtonController(
+        settingsProvider = { headsetSettings },
+        onAction = { action ->
+            if (::service.isInitialized) {
+                handleHeadsetAction(service.player, action)
+            }
+        },
+    )
+
+    init {
+        scope.launch {
+            context.dataStore.data.collect { prefs ->
+                val longPressAction =
+                    prefs[HeadsetLongPressActionKey].toHeadsetAction(HeadsetAction.NONE)
+                headsetSettings = HeadsetClickSettings(
+                    enabled = prefs[HeadsetControlsEnabledKey] ?: true,
+                    windowMs = (prefs[HeadsetClickWindowMsKey] ?: 400)
+                        .toLong()
+                        .coerceIn(250L, 700L),
+                    doubleClickAction =
+                        prefs[HeadsetDoubleClickActionKey].toHeadsetAction(HeadsetAction.NEXT),
+                    tripleClickAction =
+                        prefs[HeadsetTripleClickActionKey].toHeadsetAction(HeadsetAction.PREVIOUS),
+                    longPressEnabled = longPressAction != HeadsetAction.NONE,
+                    longPressAction = longPressAction,
+                )
+            }
+        }
+    }
+
     fun release() {
+        headsetController.release()
         scope.cancel()
     }
+
+    override fun onMediaButtonEvent(
+        session: MediaSession,
+        controllerInfo: MediaSession.ControllerInfo,
+        mediaButtonIntent: Intent,
+    ): Boolean {
+        val keyEvent = IntentCompat.getParcelableExtra(
+            mediaButtonIntent,
+            Intent.EXTRA_KEY_EVENT,
+            KeyEvent::class.java,
+        )
+        if (keyEvent != null && headsetController.handleKeyEvent(keyEvent)) {
+            return true
+        }
+        return super.onMediaButtonEvent(session, controllerInfo, mediaButtonIntent)
+    }
+
+    private fun handleHeadsetAction(player: Player, action: HeadsetAction) {
+        when (action) {
+            HeadsetAction.NONE -> Unit
+            HeadsetAction.PLAY_PAUSE -> if (player.isPlaying) player.pause() else player.play()
+            HeadsetAction.NEXT -> player.seekToNextMediaItem()
+            HeadsetAction.PREVIOUS -> player.seekToPreviousMediaItem()
+        }
+    }
+
+    private fun String?.toHeadsetAction(default: HeadsetAction): HeadsetAction =
+        this?.let { runCatching { HeadsetAction.valueOf(it) }.getOrNull() } ?: default
 
     override fun onConnect(
         session: MediaSession,

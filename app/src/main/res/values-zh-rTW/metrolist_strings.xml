@@ -844,4 +844,18 @@
     <string name="stream_source_tvhtml5">TVHTML5</string>
     <string name="stream_source_visionos">visionOS</string>
     <string name="stream_source_web_creator">WEB_CREATOR</string>
+    <string name="headset_controls">耳機控制</string>
+    <string name="headset_multi_click_enabled">啟用多擊控制</string>
+    <string name="headset_multi_click_enabled_desc">單擊：播放/暫停；雙擊與三擊動作可在下方調整。</string>
+    <string name="headset_click_window">點擊判定時間</string>
+    <string name="headset_click_window_value">%1$d 毫秒</string>
+    <string name="headset_double_click_action">雙擊動作</string>
+    <string name="headset_triple_click_action">三擊動作</string>
+    <string name="headset_long_press_action">長按動作</string>
+    <string name="headset_action_none">關閉</string>
+    <string name="headset_action_play_pause">播放 / 暫停</string>
+    <string name="headset_action_next">下一首</string>
+    <string name="headset_action_previous">上一首</string>
+    <string name="headset_resume_window">斷線後恢復時間窗</string>
+    <string name="headset_resume_window_value">%1$d 分鐘</string>
 </resources>
