@@ -64,6 +64,15 @@ android {
         buildConfigField("Long", "DISCORD_APP_ID", "1447278780795064401L")
     }
 
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include("arm64-v8a", "armeabi-v7a", "x86", "x86_64")
+            isUniversalApk = true
+        }
+    }
+
     flavorDimensions += listOf("variant")
     productFlavors {
         // FOSS - Updater, but no gcast
@@ -126,6 +135,11 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
+            // Local builds have no release keystore; sign with the debug key so the APK can be
+            // installed for testing. CI keeps signing externally when STORE_PASSWORD is set.
+            if (System.getenv("STORE_PASSWORD").isNullOrBlank()) {
+                signingConfig = signingConfigs.getByName("debug")
+            }
         }
         debug {
             if (applicationIdOverride == null) {

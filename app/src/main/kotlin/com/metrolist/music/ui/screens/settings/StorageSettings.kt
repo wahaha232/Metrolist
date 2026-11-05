@@ -86,11 +86,11 @@ fun StorageSettings(
     val imageCacheString = stringResource(R.string.image_cache).lowercase()
     val (maxImageCacheSize, onMaxImageCacheSizeChange) = rememberPreference(
         key = MaxImageCacheSizeKey,
-        defaultValue = 512
+        defaultValue = 128
     )
     val (maxSongCacheSize, onMaxSongCacheSizeChange) = rememberPreference(
         key = MaxSongCacheSizeKey,
-        defaultValue = 1024
+        defaultValue = 512
     )
     val (enableSongCache, onEnableSongCacheChange) = rememberPreference(
         key = EnableSongCacheKey,

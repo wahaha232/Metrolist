@@ -18,7 +18,7 @@ import android.graphics.RectF
 import android.graphics.Shader
 import android.os.Bundle
 import android.widget.RemoteViews
-import coil3.ImageLoader
+import coil3.SingletonImageLoader
 import coil3.request.ImageRequest
 import coil3.request.allowHardware
 import coil3.request.crossfade
@@ -38,11 +38,7 @@ class MetrolistWidgetManager @Inject constructor(
     private val database: MusicDatabase,
     private val playlistWidgetManager: PlaylistWidgetManager,
 ) {
-    private val imageLoader by lazy {
-        ImageLoader.Builder(context)
-            .crossfade(false)
-            .build()
-    }
+    private val imageLoader by lazy { SingletonImageLoader.get(context) }
 
     // Cache for album art to avoid reloading
     private var cachedArtworkUri: String? = null
@@ -60,11 +56,27 @@ class MetrolistWidgetManager @Inject constructor(
     ) {
         val appWidgetManager = AppWidgetManager.getInstance(context)
 
+        // Check every widget provider before downloading artwork. Most users have no widget
+        // placed, so this avoids a network/decode round-trip on every track change.
+        val musicWidgetIds =
+            appWidgetManager.getAppWidgetIds(ComponentName(context, MusicWidgetReceiver::class.java))
+        val turntableWidgetIds =
+            appWidgetManager.getAppWidgetIds(ComponentName(context, TurntableWidgetReceiver::class.java))
+        val playlistWidgetIds =
+            appWidgetManager.getAppWidgetIds(ComponentName(context, PlaylistWidgetReceiver::class.java))
+        if (musicWidgetIds.isEmpty() && turntableWidgetIds.isEmpty() && playlistWidgetIds.isEmpty()) {
+            return
+        }
+
         // Use cached album art if URI hasn't changed, otherwise load new one
         val albumArt: Bitmap?
         val circularAlbumArt: Bitmap?
-        
-        if (artworkUri != null && artworkUri == cachedArtworkUri && cachedAlbumArt != null) {
+        val needsArtwork = musicWidgetIds.isNotEmpty() || turntableWidgetIds.isNotEmpty()
+
+        if (!needsArtwork) {
+            albumArt = null
+            circularAlbumArt = null
+        } else if (artworkUri != null && artworkUri == cachedArtworkUri && cachedAlbumArt != null) {
             albumArt = cachedAlbumArt
             circularAlbumArt = cachedCircularAlbumArt
         } else {
@@ -77,10 +89,8 @@ class MetrolistWidgetManager @Inject constructor(
         }
 
         // Update main music player widgets
-        val componentName = ComponentName(context, MusicWidgetReceiver::class.java)
-        val widgetIds = appWidgetManager.getAppWidgetIds(componentName)
-        if (widgetIds.isNotEmpty()) {
-            widgetIds.forEach { widgetId ->
+        if (musicWidgetIds.isNotEmpty()) {
+            musicWidgetIds.forEach { widgetId ->
                 val options = appWidgetManager.getAppWidgetOptions(widgetId)
                 val views = createRemoteViewsForSize(
                     options,
@@ -97,8 +107,6 @@ class MetrolistWidgetManager @Inject constructor(
         }
 
         // Update turntable widgets
-        val turntableComponentName = ComponentName(context, TurntableWidgetReceiver::class.java)
-        val turntableWidgetIds = appWidgetManager.getAppWidgetIds(turntableComponentName)
         if (turntableWidgetIds.isNotEmpty()) {
             val turntableViews = createTurntableRemoteViews(
                 circularAlbumArt,
@@ -110,15 +118,17 @@ class MetrolistWidgetManager @Inject constructor(
             }
         }
 
-        playlistWidgetManager.updateWidgets(
-            title = title,
-            artist = artist,
-            artworkUri = artworkUri,
-            isPlaying = isPlaying,
-            isLiked = isLiked,
-            duration = duration,
-            currentPosition = currentPosition,
-        )
+        if (playlistWidgetIds.isNotEmpty()) {
+            playlistWidgetManager.updateWidgets(
+                title = title,
+                artist = artist,
+                artworkUri = artworkUri,
+                isPlaying = isPlaying,
+                isLiked = isLiked,
+                duration = duration,
+                currentPosition = currentPosition,
+            )
+        }
     }
 
     private fun createRemoteViewsForSize(

@@ -2,6 +2,7 @@ package com.metrolist.music.ui.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -38,7 +39,7 @@ fun SpeedDialGridItem(
     isActive: Boolean = false,
     isPlaying: Boolean = false,
 ) {
-    Box(
+    BoxWithConstraints(
         modifier = modifier
             .fillMaxWidth()
             .aspectRatio(1f) // Square aspect ratio
@@ -46,10 +47,11 @@ fun SpeedDialGridItem(
     ) {
         // Thumbnail
         ItemThumbnail(
-            thumbnailUrl = item.thumbnail?.resize(200, 200),
+            thumbnailUrl = item.thumbnail,
             isActive = isActive,
             isPlaying = isPlaying,
             shape = if (item is ArtistItem) CircleShape else RoundedCornerShape(ThumbnailCornerRadius),
+            requestSize = thumbnailRequestPx(maxWidth),
             modifier = Modifier.fillMaxSize()
         )
 

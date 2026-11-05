@@ -87,13 +87,19 @@ class App :
             Timber.e(e, "Failed to ensure DataStore directory")
         }
 
-        // Plant logging before extraction services initialize.
-        Timber.plant(Timber.DebugTree())
+        // Plant logging before extraction services initialize. Only in debug builds so
+        // release builds do not pay for string formatting on hot paths.
+        if (BuildConfig.DEBUG) {
+            Timber.plant(Timber.DebugTree())
+        }
         InnerTubeXPlayer.initialize(this)
 
         // Pre-read Coil cache size on background to avoid runBlocking in newImageLoader
         applicationScope.launch(Dispatchers.IO) {
-            cachedCoilCacheSize = dataStore.data.map { it[MaxImageCacheSizeKey] ?: 512 }.first()
+            cachedCoilCacheSize = dataStore.data.map { it[MaxImageCacheSizeKey] ?: 128 }.first()
+            // Older widget/recognition image loaders used a second Coil disk cache. The whole app
+            // now shares the singleton cache under cacheDir/coil, so remove the orphaned duplicate.
+            runCatching { File(cacheDir, "coil3_disk_cache").deleteRecursively() }
         }
 
         // تهيئة إعدادات التطبيق عند الإقلاع
@@ -297,7 +303,7 @@ class App :
 
     override fun newImageLoader(context: PlatformContext): ImageLoader {
         val cacheSize = cachedCoilCacheSize ?: runBlocking {
-            dataStore.data.map { it[MaxImageCacheSizeKey] ?: 512 }.first()
+            dataStore.data.map { it[MaxImageCacheSizeKey] ?: 128 }.first()
         }
         return ImageLoader
             .Builder(this)

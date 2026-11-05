@@ -1008,7 +1008,11 @@ private fun LegacyMiniMediaInfo(
                 fontWeight = FontWeight.Bold,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.basicMarquee(),
+                modifier = Modifier.basicMarquee(
+                    iterations = 1,
+                    initialDelayMillis = 3000,
+                    velocity = 30.dp,
+                ),
             )
 
              if (mediaMetadata.artists.any { it.name.isNotBlank() }) {

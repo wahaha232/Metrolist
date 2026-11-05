@@ -63,6 +63,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -134,6 +135,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlin.math.ceil
 import kotlin.math.roundToInt
 import kotlin.jvm.JvmName
 
@@ -143,6 +145,14 @@ const val ActiveBoxAlpha = 0.6f
 fun currentGridThumbnailHeight(): Dp {
     val gridItemSize by rememberEnumPreference(GridItemsSizeKey, GridItemSize.BIG)
     return if (gridItemSize == GridItemSize.BIG) GridThumbnailHeight else SmallGridThumbnailHeight
+}
+
+@Composable
+internal fun thumbnailRequestPx(size: Dp): Int {
+    val density = LocalDensity.current
+    val pixels = size.value * density.density
+    val buckets = ceil((pixels * 1.25f / 64f).toDouble()).toInt()
+    return (buckets * 64).coerceIn(64, 1080)
 }
 
 private data class ArtistLink(
@@ -552,6 +562,7 @@ fun SongListItem(
                      isActive = isActive,
                      isPlaying = isPlaying,
                      shape = RoundedCornerShape(ThumbnailCornerRadius),
+                     requestSize = thumbnailRequestPx(ListThumbnailSize),
                      modifier = Modifier.size(ListThumbnailSize)
                  )
              },
@@ -604,7 +615,7 @@ fun SongGridItem(
             fontWeight = FontWeight.Bold,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.basicMarquee().fillMaxWidth()
+            modifier = Modifier.fillMaxWidth()
         )
     },
     subtitle = {
@@ -630,6 +641,7 @@ fun SongGridItem(
             isActive = isActive,
             isPlaying = isPlaying,
             shape = RoundedCornerShape(ThumbnailCornerRadius),
+            requestSize = thumbnailRequestPx(gridHeight),
             modifier = Modifier.size(gridHeight)
         )
         if (!isActive) {
@@ -778,6 +790,7 @@ fun AlbumListItem(
             isActive = isActive,
             isPlaying = isPlaying,
             shape = RoundedCornerShape(ThumbnailCornerRadius),
+            requestSize = thumbnailRequestPx(ListThumbnailSize),
             modifier = Modifier.size(ListThumbnailSize)
         )
     },
@@ -835,7 +848,7 @@ fun AlbumGridItem(
             fontWeight = FontWeight.Bold,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.basicMarquee().fillMaxWidth()
+            modifier = Modifier.fillMaxWidth()
         )
     },
      subtitle = {
@@ -858,6 +871,7 @@ fun AlbumGridItem(
             isActive = isActive,
             isPlaying = isPlaying,
             shape = RoundedCornerShape(ThumbnailCornerRadius),
+            requestSize = thumbnailRequestPx(maxWidth),
         )
 
         AlbumPlayButton(
@@ -1001,7 +1015,7 @@ fun PlaylistGridItem(
             fontWeight = FontWeight.Bold,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.basicMarquee().fillMaxWidth()
+            modifier = Modifier.fillMaxWidth()
         )
     },
     subtitle = {
@@ -1107,6 +1121,7 @@ fun MediaMetadataListItem(
                 isActive = isActive,
                 isPlaying = isPlaying,
                 shape = RoundedCornerShape(ThumbnailCornerRadius),
+                requestSize = thumbnailRequestPx(ListThumbnailSize),
                 modifier = Modifier.size(ListThumbnailSize)
             )
         },
@@ -1208,6 +1223,7 @@ fun YouTubeListItem(
                     isActive = isActive,
                     isPlaying = isPlaying,
                     shape = if (item is ArtistItem) CircleShape else RoundedCornerShape(ThumbnailCornerRadius),
+                    requestSize = thumbnailRequestPx(ListThumbnailSize),
                     modifier = Modifier.size(ListThumbnailSize)
                 )
             },
@@ -1272,7 +1288,7 @@ fun YouTubeGridItem(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             textAlign = if (item is ArtistItem) TextAlign.Center else TextAlign.Start,
-            modifier = Modifier.basicMarquee().fillMaxWidth()
+            modifier = Modifier.fillMaxWidth()
         )
     },
      subtitle = {
@@ -1307,6 +1323,7 @@ fun YouTubeGridItem(
             isActive = isActive,
             isPlaying = isPlaying,
             shape = if (item is ArtistItem) CircleShape else RoundedCornerShape(ThumbnailCornerRadius),
+            requestSize = thumbnailRequestPx(maxWidth),
         )
 
         if (item is SongItem && !isActive) {
@@ -1475,7 +1492,8 @@ fun ItemThumbnail(
     modifier: Modifier = Modifier,
     albumIndex: Int? = null,
     isSelected: Boolean = false,
-    thumbnailRatio: Float = 1f
+    thumbnailRatio: Float = 1f,
+    requestSize: Int = 544,
 ) {
     val cropAlbumArt by rememberPreference(CropAlbumArtKey, false)
     
@@ -1489,7 +1507,7 @@ fun ItemThumbnail(
         if (albumIndex == null) {
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
-                    .data(thumbnailUrl?.resize(544, 544))
+                    .data(thumbnailUrl?.resize(requestSize, requestSize))
                     .memoryCachePolicy(coil3.request.CachePolicy.ENABLED)
                     .diskCachePolicy(coil3.request.CachePolicy.ENABLED)
                     .networkCachePolicy(coil3.request.CachePolicy.ENABLED)
