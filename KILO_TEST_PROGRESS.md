@@ -94,7 +94,7 @@ GitHub fork：`wahaha232/Metrolist`
   - 背景＋螢幕關閉：單擊仍可 `PAUSED → PLAYING → PAUSED`。
   - 關閉「啟用多擊控制」：單擊在 150ms 內即 PLAYING（確認無 400ms 延遲）；自訂雙擊/三擊映射不會套用。
   - 設定持久化：DataStore 已寫入 `headsetDoubleClickAction=NEXT`、`headsetTripleClickAction=PREVIOUS`。
-  - 設定頁 zh-TW 顯示正常（截圖在 `D:\Claude\Metrolist` 暫存，未進 git）。
+  - 設定頁 zh-TW 顯示正常（截圖：`docs/screenshots/headset-settings-zh-tw.png`）。
 - 長按：即使自訂長按動作關閉，長按也不會被當成單擊。這台 ROM 的 Google 助理會攔截長按並開啟；助理功能正常，但**自訂長按動作可能不會觸發**。
 
 ### 尚未完成（下次從這裡繼續）
