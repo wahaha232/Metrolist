@@ -1,7 +1,7 @@
 # Metrolist Kilo — 測試進度與交接
 
-最後更新：2026-11-05（暫停測試時）
-測試機：POCO X6 Pro 5G（2311DRK48G）、Android 16、480dpi、60Hz
+最後更新：2026-11-06（Stage 2 release 已建置並完成大部分回歸）
+測試機：POCO X6 Pro 5G（2311DRK48G）、Android 16、480dpi、120Hz
 原始碼：`D:\Claude\YPlayer\metrolist`（本機）
 GitHub fork：`wahaha232/Metrolist`
 分支：
@@ -10,15 +10,14 @@ GitHub fork：`wahaha232/Metrolist`
 
 ---
 
-## 目前暫停在哪裡
+## 目前狀態（2026-11-06）
 
-- App 停在「設定 → 播放與音訊 → 耳機控制」。
-- 播放狀態：暫停；目前歌曲 `Don't Look Back In Anger`。
-- 多擊控制：**已重新開啟**。
-- 雙擊動作：下一首；三擊動作：上一首；長按動作：關閉。
-- 點擊判定時間：最後一次是在 slider 左端（250ms），**尚未截圖確認**。恢復測試前請先改回 **400ms**。
-- Stage 2 的 release APK 建置在暫停時仍卡在 R8（`minifyFossReleaseWithR8`），尚未產出／安裝。
-- 手機端 DataStore 已寫入測試值，關機不會遺失。
+- Stage 2 release APK 已於 2026-11-05 17:41 建置完成，2026-11-06 安裝到 `com.metrolist.music.kilo` 並驗證。
+- 設定頁「耳機控制」正常顯示；預設 400ms、雙擊下一首、三擊上一首、長按關閉。
+- 已通過：250ms 拆分、700ms 合併、App 重啟後設定保留、首頁閒置 10 秒 0 幀 / 0.3% CPU。
+- 尚未完成：實體藍牙耳機手動測試、正式簽章、版本號 bump、dist 打包與文件更新。
+- **注意**：目前 release APK 是 **Android Debug** 簽章，版本仍是 13.7.0 (153)，不可直接當正式版發佈。
+- 下一步測試腳本：`scripts/kilo_release_checks.ps1`（Windows + adb，含實體耳機 checklist）。
 
 ---
 
@@ -97,52 +96,63 @@ GitHub fork：`wahaha232/Metrolist`
   - 設定頁 zh-TW 顯示正常（截圖：`docs/screenshots/headset-settings-zh-tw.png`）。
 - 長按：即使自訂長按動作關閉，長按也不會被當成單擊。這台 ROM 的 Google 助理會攔截長按並開啟；助理功能正常，但**自訂長按動作可能不會觸發**。
 
-### 尚未完成（下次從這裡繼續）
-1. 把點擊判定時間改回 **400ms**，並補測 250ms / 700ms 邊界。
-   - 建議做法：250ms + 350ms 間隔的兩次點擊應拆成兩次單擊（不換歌）；700ms + 同樣間隔應合成雙擊（下一首）。
-2. 完整 App 重啟／手機重啟後，確認上面的設定仍保留（DataStore 已寫入，理論上會保留）。
-3. Stage 1 回歸：加入耳機功能後，首頁閒置 10 秒仍應 0 幀。
-4. Stage 2 release APK：建置（見下方指令）、安裝到 `com.metrolist.music.kilo`、開設定頁確認「耳機控制」。
-5. 實體藍牙耳機（使用者自行測試）：
+### 2026-11-06 release 驗證（已完成）
+
+- Stage 2 release APK（`app-foss-arm64-v8a-release.apk`，24.6MB，SHA-256 `1B9089BD53D5300389D4EC449C46CE7750AABD76F5FFAA40229C77C56EE8152E`）安裝成功。
+- 設定頁「耳機控制」顯示；`啟用多擊控制` 開關、slider、三個動作選單正常。
+- 250ms 視窗：兩次點擊間隔約 350ms → 拆成兩次單擊（不換歌）。
+- 700ms 視窗：同樣間隔 → 合成雙擊（下一首）。
+- App force-stop 後重啟：400ms / 下一首 / 上一首 / 關閉 全部保留。
+- 首頁閒置 10 秒：0 幀、3 ticks（0.3% 單核）。
+- 關閉多擊後即時反應：release 上量到約 360ms，與開啟 250ms 視窗相近；量測受 dumpsys 延遲影響，需再確認。關閉後雙擊仍會落到 Media3 內建 double-tap 而換歌。
+
+### 尚未完成（正式發行前）
+
+1. **實體藍牙耳機手動測試**（用 `scripts/kilo_release_checks.ps1` 的 checklist）：
    - 單／雙／三擊是否照預期。
-   - 斷線是否暫停。
-   - 斷線後 N 分鐘內重連是否恢復。
+   - 斷線是否暫停；N 分鐘內重連是否恢復。
    - 手動暫停後再斷線，重連**不應**播放。
    - 超過時間窗重連**不應**播放。
-   - 專用語音助理鍵。
-   - 長按（若 Google 助理攔截，屬系統行為）。
+   - 專用語音助理鍵；長按（若 Google 助理攔截，屬系統行為）。
+2. **正式簽章**：目前 APK 用 Android Debug 憑證；需設定 release keystore（`STORE_PASSWORD` 等），再用 apksigner 驗證。
+3. **版本號 bump**：目前 13.7.0 (153)，與 Stage 1 相同；正式版應提高 versionCode/versionName。
+4. **dist 打包**：把 Stage 2 arm64 / universal APK 放進 `D:\Claude\Metrolist\dist`，更新 SHA-256 與本文件。
+5. （可選）確認關閉多擊後的即時反應，以及 Media3 預設雙擊是否符合「關閉＝兩次單擊」的產品需求。
 
 ---
 
 ## 在另一台電腦繼續
 
 ### 一鍵測試腳本（不需要 Kilo）
-`scripts/kilo_remaining_tests.ps1` 直接用 adb 執行剩下的測試：
-- 多擊控制關閉後：單擊延遲、自訂映射是否繞過
-- 250ms / 700ms 點擊視窗邊界
-- App 重啟後設定是否保留
-- 首頁閒置 10 秒是否仍是 0 幀
-- 安裝/啟動 release APK，確認「耳機控制」頁面
-- 可選 `-Reboot`：手機重啟後持久化
 
-最簡單：下載 `scripts/run_kilo_tests.bat` 後直接雙擊（若同目錄沒有 PS1，BAT 會自動下載）。
+**新的 release 驗收腳本**：`scripts/kilo_release_checks.ps1` + `scripts/run_kilo_release_checks.bat`
+- Release gate：APK 存在、SHA-256、applicationId、版本、簽章（debug key 會 FAIL，除非 `-AllowDebugSignature`）。
+- Release 安裝 / 啟動 / 「耳機控制」頁面。
+- 250ms / 700ms 點擊視窗邊界（約 350ms 間隔）。
+- 多擊 ON/OFF 單擊反應差異（相對計時）。
+- App 重啟後設定持久化。
+- 首頁閒置 10 秒（<30 幀、<5% CPU）。
+- 實體藍牙耳機互動 checklist（可用 `-SkipManual` 跳過）。
+- 可選 `-Reboot`：手機重啟後持久化。
+
+最簡單：下載 `scripts/run_kilo_release_checks.bat` 後直接雙擊（若同目錄沒有 PS1，BAT 會自動下載）。
 
 ```bat
-run_kilo_tests.bat
-:: 指定 release APK 並測重啟：
-run_kilo_tests.bat -ReleaseApk app\build\outputs\apk\foss\release\app-foss-arm64-v8a-release.apk -Reboot
+run_kilo_release_checks.bat
+:: 指定 APK、允許內部 debug 簽章、跳過手動 checklist：
+run_kilo_release_checks.bat -Apk app\build\outputs\apk\foss\release\app-foss-arm64-v8a-release.apk -AllowDebugSignature -SkipManual
 ```
 
 或直接跑 PowerShell：
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts\kilo_remaining_tests.ps1
-# 指定 release APK 並測重啟：
-powershell -ExecutionPolicy Bypass -File scripts\kilo_remaining_tests.ps1 `
-  -ReleaseApk app\build\outputs\apk\foss\release\app-foss-arm64-v8a-release.apk -Reboot
+powershell -ExecutionPolicy Bypass -File scripts\kilo_release_checks.ps1
+powershell -ExecutionPolicy Bypass -File scripts\kilo_release_checks.ps1 `
+  -Apk app\build\outputs\apk\foss\release\app-foss-arm64-v8a-release.apk -AllowDebugSignature -SkipManual
 ```
 
-腳本已做 PowerShell 語法檢查，但因為測試被暫停，尚未端到端執行過；UI 自動化失敗時會請你手動導航後按 Enter。
-測試結果會寫到 `test-results/remaining-tests-*.txt`。
+結果寫到 `test-results/release-checks-*.txt`。若 UI 自動化失敗，互動模式會請你手動導航後按 Enter；非互動模式會標記失敗。
+
+舊的 `scripts/kilo_remaining_tests.ps1` / `run_kilo_tests.bat` 保留作歷史參考；它的 `$pid`、`grep -o` 與 slider 邊緣點擊問題已在新腳本修正。
 
 ### 需求
 - JDK 21（本機是 `D:\Android\jdk-21`）
