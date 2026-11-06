@@ -329,12 +329,15 @@
     <string name="podcast_channels">播客頻道</string>
     <string name="view_podcast">查看播客</string>
     <string name="filter_podcasts">播客</string>
-    <string name="stands_with_palestine">這個計畫支持巴勒斯坦🇵🇸</string>
+    <string name="about_description">以 Metrolist 為基礎的獨立音樂播放器版本。</string>
+    <string name="support_this_build">支持此版本</string>
+    <string name="buy_me_a_coffee">請我喝杯咖啡</string>
+    <string name="credits_source_and_license">原始碼與授權</string>
+    <string name="credits_upstream">基於 Metrolist（GPL-3.0）</string>
     <string name="yeah">是的！</string>
     <string name="wanna_play_favorite_song">想播放他們最喜歡的歌曲嗎？</string>
     <string name="metrolist">METROLIST</string>
-    <string name="community_and_info">社區與資訊</string>
-    <string name="buy_mo_a_coffee">請我喝杯咖啡吧！</string>
+
     <string name="credits_view_repo">查看儲存庫</string>
     <string name="credits_source_code">原始碼</string>
     <string name="credits_third_party">第三方授權</string>
@@ -342,9 +345,7 @@
     <string name="credits_discord">Discord 伺服器</string>
     <string name="credits_license_desc">免費開源軟體。您可以隨意使用、研究、分享和改進它</string>
     <string name="credits_license_name">GNU 通用公共授權 v3.0</string>
-    <string name="credits_collaborators_section">合作者</string>
-    <string name="credits_collaborator">合作者</string>
-    <string name="credits_lead_developer">首席開發人員</string>
+
     <string name="logout_clear">清除</string>
     <string name="logout_keep">保存</string>
     <string name="logout_dialog_message">您想保留播放清單和音樂庫資料嗎？已下載的歌曲無論如何都會保留</string>
