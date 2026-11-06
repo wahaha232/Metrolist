@@ -246,8 +246,9 @@ function Set-ClickWindow {
     if ($seek) {
         $b = Get-NodeBounds $seek
         if ($b) {
-            $x1 = $b[0]
-            $x2 = $b[2]
+            $inset = [int](($b[2] - $b[0]) * 0.08)
+            $x1 = $b[0] + $inset
+            $x2 = $b[2] - $inset
             $y = [int](($b[1] + $b[3]) / 2)
         }
     }
@@ -338,8 +339,8 @@ function Send-TwoClicks {
 }
 
 function Get-CpuTicks {
-    param([string]$Pid)
-    $stat = (Invoke-Adb shell cat "/proc/$Pid/stat") -join ' '
+    param([string]$AppPid)
+    $stat = (Invoke-Adb shell cat "/proc/$AppPid/stat") -join ' '
     $fields = $stat -split '\s+'
     if ($fields.Count -lt 15) { return -1 }
     return [int64]$fields[13] + [int64]$fields[14]
@@ -347,19 +348,19 @@ function Get-CpuTicks {
 
 function Measure-Idle {
     param([string]$Pkg, [int]$Seconds = 10)
-    $pid = ((Invoke-Adb shell pidof $Pkg) -join ' ').Trim()
-    if (-not $pid) { return $null }
+    $appPid = ((Invoke-Adb shell pidof $Pkg) -join ' ').Trim()
+    if (-not $appPid) { return $null }
     Invoke-Adb shell dumpsys gfxinfo $Pkg reset | Out-Null
-    $t0 = Get-CpuTicks $pid
+    $t0 = Get-CpuTicks $appPid
     Start-Sleep -Seconds $Seconds
     $gfx = (Invoke-Adb shell dumpsys gfxinfo $Pkg) -join "`n"
-    $t1 = Get-CpuTicks $pid
+    $t1 = Get-CpuTicks $appPid
     $frames = -1
     if ($gfx -match 'Total frames rendered:\s*(\d+)') { $frames = [int]$matches[1] }
     return [pscustomobject]@{
         Frames = $frames
         CpuTicks = [int64]($t1 - $t0)
-        Pid = $pid
+        Pid = $appPid
     }
 }
 
@@ -458,7 +459,7 @@ Add-TestResult 'Settings persist after app restart' ($has400 -and $hasNext -and 
 
 $prefsPath = ((Invoke-Adb shell run-as $Package find files -name '*.preferences_pb') -join '').Trim()
 if ($prefsPath) {
-    $keys = (Invoke-Adb shell run-as $Package grep -a -o 'headset[A-Za-z]*' $prefsPath) -join ','
+    $keys = (Invoke-Adb shell "run-as $Package grep -a -o 'headset[A-Za-z]*' $prefsPath") -join ','
     Write-Log "DataStore keys: $keys"
 }
 
@@ -554,7 +555,7 @@ if ($Reboot) {
         Add-TestResult 'Debug package survives reboot' ($pkgPath -match 'package:') $pkgPath.Trim()
         $prefsPath = ((Invoke-Adb shell run-as $Package find files -name '*.preferences_pb') -join '').Trim()
         if ($prefsPath) {
-            $keys = (Invoke-Adb shell run-as $Package grep -a -o 'headset[A-Za-z]*' $prefsPath) -join ','
+            $keys = (Invoke-Adb shell "run-as $Package grep -a -o 'headset[A-Za-z]*' $prefsPath") -join ','
             Add-TestResult 'Headset settings survive reboot' ($keys -match 'headsetDoubleClickAction') $keys
         } else {
             Add-TestResult 'Headset settings survive reboot' $false 'preferences file not found'
