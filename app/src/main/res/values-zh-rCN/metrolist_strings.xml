@@ -526,6 +526,12 @@
     <string name="current_version">当前版本</string>
     <string name="version_format">版本：%s</string>
     <string name="update_settings">更新设置</string>
+    <string name="update_check_frequency">检查频率</string>
+    <string name="update_frequency_1h">每小时</string>
+    <string name="update_frequency_6h">每 6 小时</string>
+    <string name="update_frequency_12h">每 12 小时</string>
+    <string name="update_frequency_24h">每天</string>
+    <string name="update_frequency_7d">每周</string>
     <string name="check_for_updates_title">检查更新</string>
     <string name="check_for_updates_button">检查更新</string>
     <string name="checking_for_updates">正在检查更新…</string>
@@ -556,6 +562,8 @@
     <string name="widget_recognizer_notification_text">正在录音以识别歌曲…</string>
     <string name="importing_playlist">正在导入播放列表…</string>
     <string name="credits_view_repo">查看仓库</string>
+    <string name="credits_source_code">源代码</string>
+    <string name="credits_third_party">第三方许可证</string>
     <string name="logout_dialog_title">保留媒体库数据？</string>
     <string name="logout_dialog_message">要保留您的播放列表和媒体库数据吗？已下载的歌曲将始终保留</string>
     <string name="logout_keep">保留</string>

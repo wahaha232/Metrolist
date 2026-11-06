@@ -5,6 +5,7 @@
 
 package com.metrolist.music.utils
 
+import android.os.Build
 import com.metrolist.music.BuildConfig
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
@@ -39,7 +40,7 @@ object Updater {
     private var cachedAllReleases: List<ReleaseInfo> = emptyList()
     
     private const val CHECK_INTERVAL_MILLIS = 2 * 60 * 60 * 1000L // 2 hours
-    private const val GITHUB_API_BASE = "https://api.github.com/repos/MetrolistGroup/Metrolist"
+    private const val GITHUB_API_BASE = "https://api.github.com/repos/wahaha232/Metrolist"
     private const val KMP_LATEST_RELEASE_URL = "https://api.github.com/repos/MetrolistGroup/Metrolist-KMP/releases/latest"
     private const val KMP_APK_NAME = "Metrolist.apk"
 
@@ -75,7 +76,9 @@ object Updater {
      * Get the current app's architecture and variant
      */
     private fun getCurrentAppVariant(): Pair<String, String> {
-        val architecture = BuildConfig.ARCHITECTURE
+        val supported = setOf("arm64-v8a", "armeabi-v7a", "x86", "x86_64")
+        val architecture = Build.SUPPORTED_ABIS.firstOrNull { it in supported }
+            ?: BuildConfig.ARCHITECTURE
         val variant = if (BuildConfig.CAST_AVAILABLE) "gms" else "foss"
         return architecture to variant
     }
@@ -107,6 +110,16 @@ object Updater {
                 name.startsWith("app-") && name.endsWith("-with-Google-Cast.apk") -> {
                     val arch = name.removePrefix("app-").removeSuffix("-with-Google-Cast.apk")
                     arch to "gms"
+                }
+                name.startsWith("Metrolist-Kilo-") || name.startsWith("Metrolist-Claude-") -> {
+                    val arch = when {
+                        name.contains("-arm64-v8a") -> "arm64-v8a"
+                        name.contains("-armeabi-v7a") -> "armeabi-v7a"
+                        name.contains("-x86_64") -> "x86_64"
+                        name.contains("-x86") -> "x86"
+                        else -> "universal"
+                    }
+                    arch to "foss"
                 }
                 else -> null to null
             }
@@ -220,10 +233,17 @@ object Updater {
      */
     fun getDownloadUrlForCurrentVariant(releaseInfo: ReleaseInfo): String? {
         val (currentArch, currentVariant) = getCurrentAppVariant()
-        
-        return releaseInfo.assets
+        val flavor = if (BuildConfig.APPLICATION_ID.endsWith(".claude")) "Claude" else "Kilo"
+        val flavorAssets = releaseInfo.assets.filter {
+            it.name.contains("Metrolist-$flavor-", ignoreCase = true)
+        }
+
+        return flavorAssets
             .find { it.architecture == currentArch && it.variant == currentVariant }
             ?.downloadUrl
+            ?: flavorAssets
+                .find { it.architecture == "universal" && it.variant == currentVariant }
+                ?.downloadUrl
     }
 
     /**

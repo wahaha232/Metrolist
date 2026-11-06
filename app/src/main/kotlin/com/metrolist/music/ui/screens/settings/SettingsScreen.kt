@@ -233,6 +233,14 @@ fun SettingsScreen(
                         onClick = { navController.navigate("settings/about") }
                     )
                 )
+                add(
+                    Material3SettingsItem(
+                        icon = painterResource(R.drawable.github),
+                        title = { Text(stringResource(R.string.credits_source_code)) },
+                        description = { Text("github.com/wahaha232/Metrolist") },
+                        onClick = { uriHandler.openUri("https://github.com/wahaha232/Metrolist") }
+                    )
+                )
                 if (BuildConfig.UPDATER_AVAILABLE && latestVersionName != BuildConfig.BASE_VERSION_NAME) {
                     val releaseInfo = Updater.getCachedLatestRelease()
                     val downloadUrl = releaseInfo?.let { Updater.getDownloadUrlForCurrentVariant(it) }

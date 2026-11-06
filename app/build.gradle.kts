@@ -40,12 +40,12 @@ android {
         applicationId = applicationIdOverride ?: baseApplicationId
         minSdk = 26
         targetSdk = 36
-        versionCode = 153
-        versionName = "13.7.0"
+        versionCode = 154
+        versionName = "13.8.0"
         val baseVersionName = requireNotNull(versionName)
         buildConfigField("String", "BASE_VERSION_NAME", "\"$baseVersionName\"")
         buildCommit?.let { versionName = "$baseVersionName+$it" }
-        resValue("string", "app_name", appNameOverride ?: "Metrolist")
+        resValue("string", "app_name", appNameOverride ?: "Kilo Music")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
@@ -66,14 +66,14 @@ android {
 
     splits {
         abi {
-            isEnable = true
+            isEnable = !providers.gradleProperty("noSplits").isPresent
             reset()
             include("arm64-v8a", "armeabi-v7a", "x86", "x86_64")
             isUniversalApk = true
         }
     }
 
-    flavorDimensions += listOf("variant")
+    flavorDimensions += listOf("variant", "lyrics")
     productFlavors {
         // FOSS - Updater, but no gcast
         create("foss") {
@@ -95,6 +95,18 @@ android {
             dimension = "variant"
             buildConfigField("Boolean", "CAST_AVAILABLE", "false")
             buildConfigField("Boolean", "UPDATER_AVAILABLE", "false")
+        }
+
+        // Slim: no Japanese dictionary; Full: Kuromoji IPADIC included
+        create("slim") {
+            dimension = "lyrics"
+            isDefault = true
+            buildConfigField("Boolean", "JAPANESE_ROMANIZATION", "false")
+        }
+
+        create("full") {
+            dimension = "lyrics"
+            buildConfigField("Boolean", "JAPANESE_ROMANIZATION", "true")
         }
     }
 
@@ -129,7 +141,7 @@ android {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
-            isCrunchPngs = false
+            isCrunchPngs = true
             isDebuggable = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -139,6 +151,8 @@ android {
             // installed for testing. CI keeps signing externally when STORE_PASSWORD is set.
             if (System.getenv("STORE_PASSWORD").isNullOrBlank()) {
                 signingConfig = signingConfigs.getByName("debug")
+            } else {
+                signingConfig = signingConfigs.getByName("release")
             }
         }
         debug {
@@ -197,6 +211,7 @@ android {
 
     androidResources {
         generateLocaleConfig = true
+        localeFilters += listOf("en", "zh-rTW", "zh-rCN", "ja")
     }
 
     packaging {
@@ -306,7 +321,7 @@ dependencies {
     "gmsImplementation"(libs.cast.framework)
 
     implementation(libs.room.runtime)
-    implementation(libs.kuromoji.ipadic)
+    "fullImplementation"(libs.kuromoji.ipadic)
     implementation(libs.tinypinyin)
     ksp(libs.room.compiler)
 

@@ -255,6 +255,12 @@
     <string name="current_version">Current version</string>
     <string name="version_format">Version: %s</string>
     <string name="update_settings">Update settings</string>
+    <string name="update_check_frequency">Check frequency</string>
+    <string name="update_frequency_1h">Every hour</string>
+    <string name="update_frequency_6h">Every 6 hours</string>
+    <string name="update_frequency_12h">Every 12 hours</string>
+    <string name="update_frequency_24h">Daily</string>
+    <string name="update_frequency_7d">Weekly</string>
     <string name="check_for_updates_title">Check for updates</string>
     <string name="checking_for_updates">Checking for updates…</string>
     <string name="latest_version_format">Latest: %s</string>
@@ -855,6 +861,8 @@
     <string name="credits_discord">Discord server</string>
     <string name="credits_telegram">Telegram channel</string>
     <string name="credits_view_repo">View repository</string>
+    <string name="credits_source_code">Source code</string>
+    <string name="credits_third_party">Third-party licenses</string>
     <string name="buy_mo_a_coffee">Buy me a coffee!</string>
     <string name="community_and_info">Community &amp; Info</string>
     <string name="metrolist">METROLIST</string>

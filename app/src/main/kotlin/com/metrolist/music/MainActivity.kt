@@ -136,6 +136,8 @@ import com.metrolist.innertube.models.WatchEndpoint
 import com.metrolist.music.constants.AppBarHeight
 import com.metrolist.music.constants.AppLanguageKey
 import com.metrolist.music.constants.CheckForUpdatesKey
+import com.metrolist.music.constants.LastUpdateCheckAtKey
+import com.metrolist.music.constants.UpdateCheckFrequencyKey
 import com.metrolist.music.constants.DarkModeKey
 import com.metrolist.music.constants.DefaultOpenTabKey
 import com.metrolist.music.constants.DismissedKmpUpdateKey
@@ -495,14 +497,23 @@ class MainActivity : FragmentActivity() {
         syncUtils: SyncUtils,
     ) {
         val checkForUpdates by rememberPreference(CheckForUpdatesKey, defaultValue = true)
+        val (updateFrequency, _) = rememberPreference(UpdateCheckFrequencyKey, 6 * 60 * 60 * 1000L)
         var availableUpdate by remember { mutableStateOf<AvailableUpdate?>(null) }
 
         if (BuildConfig.UPDATER_AVAILABLE) {
-            LaunchedEffect(checkForUpdates) {
+            LaunchedEffect(checkForUpdates, updateFrequency) {
                 if (checkForUpdates) {
                     val preferences = dataStore.data.first()
                     val notificationsEnabled = preferences[UpdateNotificationsEnabledKey] ?: true
-                    val (releaseInfo, hasUpdate) = Updater.checkForUpdate().getOrNull() ?: (null to false)
+                    val lastCheck = preferences[LastUpdateCheckAtKey] ?: 0L
+                    if (System.currentTimeMillis() - lastCheck < updateFrequency) {
+                        return@LaunchedEffect
+                    }
+                    val checkResult = Updater.checkForUpdate(forceRefresh = true)
+                    val (releaseInfo, hasUpdate) = checkResult.getOrNull() ?: (null to false)
+                    if (checkResult.isSuccess) {
+                        safeDataStoreEdit { it[LastUpdateCheckAtKey] = System.currentTimeMillis() }
+                    }
                     releaseInfo?.let { onLatestVersionNameChange(it.versionName) }
 
                     val standaloneUpdate =
@@ -513,13 +524,7 @@ class MainActivity : FragmentActivity() {
                                     AvailableUpdate(release, downloadUrl, isKmp = false)
                                 }
                             }
-                    val kmpUpdate =
-                        Updater.getLatestKmpRelease().getOrNull()?.let { release ->
-                            release.assets.firstOrNull()?.let { asset ->
-                                AvailableUpdate(release, asset.downloadUrl, isKmp = true)
-                            }
-                        }
-                    val update = kmpUpdate ?: standaloneUpdate
+                    val update = standaloneUpdate
                     availableUpdate = update?.takeUnless {
                         it.release.tagName == preferences[it.dismissalKey]
                     }

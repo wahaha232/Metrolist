@@ -1,6 +1,6 @@
 # Metrolist Kilo — 測試進度與交接
 
-最後更新：2026-11-06（Stage 2 release 已建置並完成大部分回歸）
+最後更新：2026-11-07（Stage 2 release 13.8.0 已正式簽章；Kilo/Claude 共用同一金鑰）
 測試機：POCO X6 Pro 5G（2311DRK48G）、Android 16、480dpi、120Hz
 原始碼：`D:\Claude\YPlayer\metrolist`（本機）
 GitHub fork：`wahaha232/Metrolist`
@@ -12,11 +12,11 @@ GitHub fork：`wahaha232/Metrolist`
 
 ## 目前狀態（2026-11-06）
 
-- Stage 2 release APK 已於 2026-11-05 17:41 建置完成，2026-11-06 安裝到 `com.metrolist.music.kilo` 並驗證。
+- Stage 2 release **13.8.0 (154)** 已於 2026-11-07 以 release keystore 簽章建置；Kilo/Claude 兩個 applicationId 共用同一把金鑰。
 - 設定頁「耳機控制」正常顯示；預設 400ms、雙擊下一首、三擊上一首、長按關閉。
-- 已通過：250ms 拆分、700ms 合併、App 重啟後設定保留、首頁閒置 10 秒 0 幀 / 0.3% CPU。
-- 尚未完成：實體藍牙耳機手動測試、正式簽章、版本號 bump、dist 打包與文件更新。
-- **注意**：目前 release APK 是 **Android Debug** 簽章，版本仍是 13.7.0 (153)，不可直接當正式版發佈。
+- 已通過：250ms 拆分、700ms 合併、雙擊下一首、三擊上一首、App 重啟後設定保留、首頁閒置 10 秒 0 幀。
+- 尚未完成：實體藍牙耳機 checklist（斷線/重連/時間窗/助理鍵）與實機安裝驗證（MIUI 需允許 USB 安裝）。
+- 簽章憑證 SHA-256：`37:C7:FE:2B:EB:F7:72:A8:7B:7A:8A:3D:33:FF:F0:DA:94:9B:EB:89:30:A6:C0:4B:9B:B1:65:A5:AC:45:AA:F4`
 - 下一步測試腳本：`scripts/kilo_release_checks.ps1`（Windows + adb，含實體耳機 checklist）。
 - 測試需知（另一台電腦接續）：`scripts/KILO_TEST_GUIDE.md`。
 
@@ -51,7 +51,7 @@ GitHub fork：`wahaha232/Metrolist`
 - `ui/screens/settings/StorageSettings.kt`：歌曲快取預設 1024→512MB。
 - `MainActivity.kt`：動態主題取色解碼降到 64×64（原本已在 IO 與依網址快取）。
 - `ui/player/MiniPlayer.kt`：舊版迷你播放器 marquee 改為只跑 1 次。
-- `app/build.gradle.kts`：ABI split（arm64 / armeabi-v7a / x86 / x86_64 + universal）；本機 release 在沒有 `STORE_PASSWORD` 時用 debug key 簽章。
+- `app/build.gradle.kts`：ABI split（arm64 / armeabi-v7a / x86 / x86_64 + universal）；release buildType 在設定 `STORE_PASSWORD`/`KEY_ALIAS`/`KEY_PASSWORD` 時使用 release signingConfig，未設定時才退回 debug key。
 
 ### 縮圖尺寸（480dpi，1.25x，64px 級距）
 - 48dp 列表縮圖：**544×544 → 192×192**
@@ -107,18 +107,36 @@ GitHub fork：`wahaha232/Metrolist`
 - 首頁閒置 10 秒：0 幀、3 ticks（0.3% 單核）。
 - 關閉多擊後即時反應：release 上量到約 360ms，與開啟 250ms 視窗相近；量測受 dumpsys 延遲影響，需再確認。關閉後雙擊仍會落到 Media3 內建 double-tap 而換歌。
 
+### 2026-11-07 release 簽章、瘦身與改名（已完成）
+
+- 版本：13.8.0 (154)；compileSdk 37、build-tools 37.0.0、JDK 21。
+- 共用 keystore：`D:\Claude\keystore\metrolist-release.jks`（alias `metrolist-release`）。
+- App 名稱：Kilo Music（Kilo / Claude 共用）；ICON：Material Symbols `music_note`（Apache-2.0）。
+- Slim / Full flavor：
+  - slim：移除 Kuromoji IPADIC（0 個字典檔），arm64 APK **8,509,315 bytes**（8.5MB）。
+  - full：保留 Kuromoji IPADIC（8 個字典檔，壓縮 13,324,082 bytes），arm64 APK **21,883,967 bytes**（21.9MB）。
+- Kilo slim arm64 SHA-256 `B2D3CDB6F14F84AE69A3ABEB3FB449F90663DAA6C12F7C2EC99253C62261F103`。
+- Claude slim arm64 SHA-256 `356FCF32C102A05C8DFFA2875F005A273A7903BFB2519EAFA8D1EC300C608F7E`。
+- Kilo full arm64 SHA-256 `1EE223FACB1F89D86BD8F5986FE96E9459B9DA273F4646EAEA7A186B5605FD34`。
+- Claude full arm64 SHA-256 `1672FEFD50B5E46D052C0EB3D106ED91AAEE768BB2151C7BAB0973E4F4724F00`。
+- AAB：`Metrolist-Kilo-13.8.0-slim.aab`，19,183,088 bytes，SHA-256 `31B37F3018DA6154DD9FD75C4EFFE1359A9076FDDAA2FE00F88262F88CC70C6B`。
+- 憑證 SHA-256：`37c7fe2bebf772a87b7a8a3d33fff0da949beb8930a6c04b9bb165a5ac45aaf4`（apksigner 驗證通過）。
+- 雲端更新：GitHub releases（`wahaha232/Metrolist`），頻率 1h/6h/12h/24h/7d，App 啟動時檢查。
+- Settings 與 About 新增 GitHub 原始碼連結（GitHub icon）；上游 credits 保留。
+- 開源合規：`THIRD_PARTY_LICENSES.md`、`LICENSES/Apache-2.0.txt`；發布 APK 前必須把修改後原始碼推到 fork。
+- 交付目錄：`D:\VS CODE\PROJECT\METROLIST-TEST\dist`；建置腳本：`D:\VS CODE\PROJECT\METROLIST-TEST\build-release.ps1`（`-Lyrics slim|full`、`-Bundle`）。
+
 ### 尚未完成（正式發行前）
 
-1. **實體藍牙耳機手動測試**（用 `scripts/kilo_release_checks.ps1` 的 checklist）：
-   - 單／雙／三擊是否照預期。
+1. **實體藍牙耳機手動測試**（核心點擊已用 ADB 驗證；仍需實機 checklist）：
    - 斷線是否暫停；N 分鐘內重連是否恢復。
    - 手動暫停後再斷線，重連**不應**播放。
    - 超過時間窗重連**不應**播放。
    - 專用語音助理鍵；長按（若 Google 助理攔截，屬系統行為）。
-2. **正式簽章**：目前 APK 用 Android Debug 憑證；需設定 release keystore（`STORE_PASSWORD` 等），再用 apksigner 驗證。
-3. **版本號 bump**：目前 13.7.0 (153)，與 Stage 1 相同；正式版應提高 versionCode/versionName。
-4. **dist 打包**：把 Stage 2 arm64 / universal APK 放進 `D:\Claude\Metrolist\dist`，更新 SHA-256 與本文件。
-5. （可選）確認關閉多擊後的即時反應，以及 Media3 預設雙擊是否符合「關閉＝兩次單擊」的產品需求。
+2. **實機安裝驗證**：測試機的 Kilo 仍是 debug 簽章，換成 release 簽章需先解除安裝（會清資料）；Claude 是新 package ID，可並存。此機回報 `INSTALL_FAILED_USER_RESTRICTED`，需在開發者選項允許 USB 安裝。
+3. （可選）修正測試腳本的 uiautomator 導航（帳號選單不出現在 dump；後期 App dump 回 `null root node`）。
+4. **雲端更新上線**：在 `wahaha232/Metrolist` 建立 release（release name 必須可解析為 `13.8.0`），上傳 `Metrolist-Kilo-13.8.0-slim-arm64-v8a.apk`、`Metrolist-Kilo-13.8.0-slim-universal.apk`、Claude 對應檔；更新器會依 ABI 選 arm64，找不到才用 universal。
+5. **原始碼發布（GPL-3.0）**：commit/push 本次修改、`THIRD_PARTY_LICENSES.md` 與 `LICENSES/Apache-2.0.txt`；發布 APK 前必須完成，否則不符合開源授權。
 
 ---
 

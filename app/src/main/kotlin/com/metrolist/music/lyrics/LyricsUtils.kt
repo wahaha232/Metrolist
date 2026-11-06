@@ -6,8 +6,8 @@
 package com.metrolist.music.lyrics
 
 import android.text.format.DateUtils
-import com.atilika.kuromoji.ipadic.Tokenizer
 import com.github.promeg.pinyinhelper.Pinyin
+import com.metrolist.music.BuildConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.Locale
@@ -361,10 +361,24 @@ object LyricsUtils {
         "Ѓ", "ѓ", "Ѕ", "ѕ", "Ќ", "ќ"
     )
 
-    // Lazy initialized Tokenizer
-    private val kuromojiTokenizer: Tokenizer by lazy {
-        Tokenizer()
+    // Kuromoji is only packaged in the "full" flavor. Reflection keeps the
+    // common source set free of the 12.7 MB IPADIC dependency.
+    private val kuromojiTokenizer: Any? by lazy {
+        if (!BuildConfig.JAPANESE_ROMANIZATION) {
+            null
+        } else {
+            runCatching {
+                Class.forName("com.atilika.kuromoji.ipadic.Tokenizer")
+                    .getDeclaredConstructor()
+                    .newInstance()
+            }.getOrNull()
+        }
     }
+
+    private fun tokenString(token: Any, method: String): String? =
+        runCatching {
+            token.javaClass.getMethod(method).invoke(token) as? String
+        }.getOrNull()
 
     private val HEX_ENTITY_REGEX = "&#x([0-9a-fA-F]+);".toRegex()
     private val DEC_ENTITY_REGEX = "&#(\\d+);".toRegex()
@@ -868,15 +882,22 @@ object LyricsUtils {
     } */
 
     suspend fun romanizeJapanese(text: String): String = withContext(Dispatchers.Default) {
-        val tokens = kuromojiTokenizer.tokenize(text)
+        val tokenizer = kuromojiTokenizer ?: return@withContext text
+        val tokens = runCatching {
+            tokenizer.javaClass
+                .getMethod("tokenize", String::class.java)
+                .invoke(tokenizer, text) as List<*>
+        }.getOrNull() ?: return@withContext text
+
         val romanizedTokens = tokens.mapIndexed { index, token ->
-            val currentReading = if (token.reading.isNullOrEmpty() || token.reading == "*") {
-                token.surface
-            } else {
-                token.reading
-            }
-            val nextTokenReading = if (index + 1 < tokens.size) {
-                tokens[index + 1].reading?.takeIf { it.isNotEmpty() && it != "*" } ?: tokens[index + 1].surface
+            if (token == null) return@mapIndexed ""
+            val surface = tokenString(token, "getSurface") ?: ""
+            val reading = tokenString(token, "getReading")
+            val currentReading = if (reading.isNullOrEmpty() || reading == "*") surface else reading
+            val nextToken = tokens.getOrNull(index + 1)
+            val nextTokenReading = if (nextToken != null) {
+                tokenString(nextToken, "getReading")?.takeIf { it.isNotEmpty() && it != "*" }
+                    ?: tokenString(nextToken, "getSurface")
             } else {
                 null
             }

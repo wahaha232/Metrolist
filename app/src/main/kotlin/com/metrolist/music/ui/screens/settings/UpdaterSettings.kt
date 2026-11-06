@@ -5,7 +5,9 @@
 
 package com.metrolist.music.ui.screens.settings
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,13 +17,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -40,6 +45,7 @@ import com.metrolist.music.BuildConfig
 import com.metrolist.music.LocalPlayerAwareWindowInsets
 import com.metrolist.music.R
 import com.metrolist.music.constants.CheckForUpdatesKey
+import com.metrolist.music.constants.UpdateCheckFrequencyKey
 import com.metrolist.music.constants.UpdateNotificationsEnabledKey
 import com.metrolist.music.ui.component.IconButton
 import com.metrolist.music.ui.component.Material3SettingsGroup
@@ -58,6 +64,8 @@ fun UpdaterScreen(
 ) {
     val (checkForUpdates, onCheckForUpdatesChange) = rememberPreference(CheckForUpdatesKey, true)
     val (updateNotifications, onUpdateNotificationsChange) = rememberPreference(UpdateNotificationsEnabledKey, true)
+    val (checkFrequency, onCheckFrequencyChange) = rememberPreference(UpdateCheckFrequencyKey, 6 * 60 * 60 * 1000L)
+    var showFrequencyDialog by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
     var isChecking by remember { mutableStateOf(false) }
@@ -164,6 +172,24 @@ fun UpdaterScreen(
                                 onClick = { onUpdateNotificationsChange(!updateNotifications) },
                             ),
                         )
+                        add(
+                            Material3SettingsItem(
+                                title = { Text(stringResource(R.string.update_check_frequency)) },
+                                icon = painterResource(R.drawable.update),
+                                description = {
+                                    Text(
+                                        when (checkFrequency) {
+                                            60 * 60 * 1000L -> stringResource(R.string.update_frequency_1h)
+                                            12 * 60 * 60 * 1000L -> stringResource(R.string.update_frequency_12h)
+                                            24 * 60 * 60 * 1000L -> stringResource(R.string.update_frequency_24h)
+                                            7 * 24 * 60 * 60 * 1000L -> stringResource(R.string.update_frequency_7d)
+                                            else -> stringResource(R.string.update_frequency_6h)
+                                        },
+                                    )
+                                },
+                                onClick = { showFrequencyDialog = true },
+                            ),
+                        )
                     }
                 },
         )
@@ -240,6 +266,46 @@ fun UpdaterScreen(
         }
 
         Spacer(Modifier.height(32.dp))
+    }
+
+    if (showFrequencyDialog) {
+        AlertDialog(
+            onDismissRequest = { showFrequencyDialog = false },
+            title = { Text(stringResource(R.string.update_check_frequency)) },
+            text = {
+                Column {
+                    listOf(
+                        60 * 60 * 1000L to R.string.update_frequency_1h,
+                        6 * 60 * 60 * 1000L to R.string.update_frequency_6h,
+                        12 * 60 * 60 * 1000L to R.string.update_frequency_12h,
+                        24 * 60 * 60 * 1000L to R.string.update_frequency_24h,
+                        7 * 24 * 60 * 60 * 1000L to R.string.update_frequency_7d,
+                    ).forEach { (ms, labelRes) ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth().clickable {
+                                onCheckFrequencyChange(ms)
+                                showFrequencyDialog = false
+                            },
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            RadioButton(
+                                selected = checkFrequency == ms,
+                                onClick = null,
+                            )
+                            Text(
+                                text = stringResource(labelRes),
+                                modifier = Modifier.padding(start = 8.dp),
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showFrequencyDialog = false }) {
+                    Text(stringResource(android.R.string.cancel))
+                }
+            },
+        )
     }
 
     TopAppBar(

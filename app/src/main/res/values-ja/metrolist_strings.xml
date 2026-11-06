@@ -537,6 +537,12 @@
     <string name="current_version">バージョン</string>
     <string name="version_format">Ver. %s</string>
     <string name="update_settings">アップデート設定</string>
+    <string name="update_check_frequency">更新確認の頻度</string>
+    <string name="update_frequency_1h">1時間ごと</string>
+    <string name="update_frequency_6h">6時間ごと</string>
+    <string name="update_frequency_12h">12時間ごと</string>
+    <string name="update_frequency_24h">毎日</string>
+    <string name="update_frequency_7d">毎週</string>
     <string name="check_for_updates_title">アップデート</string>
     <string name="checking_for_updates">アップデートを確認中…</string>
     <string name="latest_version_format">アプリは最新です：Ver. %s</string>
@@ -567,6 +573,8 @@
     <string name="credits_discord">Discordサーバー</string>
     <string name="credits_telegram">Telegramチャンネル</string>
     <string name="credits_view_repo">リポジトリを表示</string>
+    <string name="credits_source_code">ソースコード</string>
+    <string name="credits_third_party">サードパーティライセンス</string>
     <string name="buy_mo_a_coffee">コーヒーをおごる</string>
     <string name="community_and_info">コミュニティと情報</string>
     <string name="metrolist">METROLIST</string>

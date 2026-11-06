@@ -119,8 +119,10 @@ private val collaborators = listOf(
 private val communityLinks = listOf(
     CommunityLink(R.string.credits_discord, R.drawable.discord, "https://discord.com/invite/zrdbeRG2Mt"),
     CommunityLink(R.string.credits_telegram, R.drawable.telegram, "https://t.me/metrolistapp"),
+    CommunityLink(R.string.credits_source_code, R.drawable.github, "https://github.com/wahaha232/Metrolist"),
     CommunityLink(R.string.credits_view_repo, R.drawable.github, "https://github.com/MetrolistGroup/Metrolist"),
-    CommunityLink(R.string.credits_license_name, R.drawable.info, "https://github.com/MetrolistGroup/Metrolist/blob/main/LICENSE")
+    CommunityLink(R.string.credits_license_name, R.drawable.info, "https://github.com/wahaha232/Metrolist/blob/stage2-bluetooth/LICENSE"),
+    CommunityLink(R.string.credits_third_party, R.drawable.info, "https://github.com/wahaha232/Metrolist/blob/stage2-bluetooth/THIRD_PARTY_LICENSES.md")
 )
 
 private fun handleEasterEggClick(

@@ -254,6 +254,12 @@
     <string name="view_on_github">在 GitHub 上查看</string>
     <string name="current_version">目前版本</string>
     <string name="update_settings">更新設定</string>
+    <string name="update_check_frequency">檢查頻率</string>
+    <string name="update_frequency_1h">每小時</string>
+    <string name="update_frequency_6h">每 6 小時</string>
+    <string name="update_frequency_12h">每 12 小時</string>
+    <string name="update_frequency_24h">每天</string>
+    <string name="update_frequency_7d">每週</string>
     <string name="check_for_updates_title">請檢查更新</string>
     <string name="checking_for_updates">正在檢查更新…</string>
     <string name="check_for_updates_button">請檢查更新</string>
@@ -330,6 +336,8 @@
     <string name="community_and_info">社區與資訊</string>
     <string name="buy_mo_a_coffee">請我喝杯咖啡吧！</string>
     <string name="credits_view_repo">查看儲存庫</string>
+    <string name="credits_source_code">原始碼</string>
+    <string name="credits_third_party">第三方授權</string>
     <string name="credits_telegram">Telegram頻道</string>
     <string name="credits_discord">Discord 伺服器</string>
     <string name="credits_license_desc">免費開源軟體。您可以隨意使用、研究、分享和改進它</string>

@@ -38,6 +38,10 @@
     volatile <fields>;
 }
 
+# Kuromoji is loaded reflectively by the "full" lyrics flavor only.
+-keep class com.atilika.kuromoji.** { *; }
+-dontwarn com.atilika.kuromoji.**
+
 # Eliminate coroutines debug-only code paths so R8 sees a single, consistent
 # control-flow graph regardless of build machine or JVM configuration.
 # Source: https://github.com/Kotlin/kotlinx.coroutines/blob/master/kotlinx-coroutines-core/jvm/resources/META-INF/proguard/r8-from-1.6.0/coroutines.pro
