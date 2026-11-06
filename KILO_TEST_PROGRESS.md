@@ -125,6 +125,8 @@ GitHub fork：`wahaha232/Metrolist`
 - Settings 與 About 新增 GitHub 原始碼連結（GitHub icon）；上游 credits 保留。
 - 開源合規：`THIRD_PARTY_LICENSES.md`、`LICENSES/Apache-2.0.txt`；發布 APK 前必須把修改後原始碼推到 fork。
 - 交付目錄：`D:\VS CODE\PROJECT\METROLIST-TEST\dist`；建置腳本：`D:\VS CODE\PROJECT\METROLIST-TEST\build-release.ps1`（`-Lyrics slim|full`、`-Bundle`）。
+- 正式發布（2026-11-07）：commit `620a417` 已推上 `stage2-bluetooth`；GitHub release `13.8.0`（public）已上傳 7 個 assets。
+- 測試機：已解除安裝舊 debug 13.7.0，安裝 Kilo slim 13.8.0 (154) 成功；舊資料已清空。
 
 ### 尚未完成（正式發行前）
 
@@ -133,10 +135,7 @@ GitHub fork：`wahaha232/Metrolist`
    - 手動暫停後再斷線，重連**不應**播放。
    - 超過時間窗重連**不應**播放。
    - 專用語音助理鍵；長按（若 Google 助理攔截，屬系統行為）。
-2. **實機安裝驗證**：測試機的 Kilo 仍是 debug 簽章，換成 release 簽章需先解除安裝（會清資料）；Claude 是新 package ID，可並存。此機回報 `INSTALL_FAILED_USER_RESTRICTED`，需在開發者選項允許 USB 安裝。
-3. （可選）修正測試腳本的 uiautomator 導航（帳號選單不出現在 dump；後期 App dump 回 `null root node`）。
-4. **雲端更新上線**：在 `wahaha232/Metrolist` 建立 release（release name 必須可解析為 `13.8.0`），上傳 `Metrolist-Kilo-13.8.0-slim-arm64-v8a.apk`、`Metrolist-Kilo-13.8.0-slim-universal.apk`、Claude 對應檔；更新器會依 ABI 選 arm64，找不到才用 universal。
-5. **原始碼發布（GPL-3.0）**：commit/push 本次修改、`THIRD_PARTY_LICENSES.md` 與 `LICENSES/Apache-2.0.txt`；發布 APK 前必須完成，否則不符合開源授權。
+2. （可選）修正測試腳本的 uiautomator 導航（帳號選單不出現在 dump；後期 App dump 回 `null root node`）。
 
 ---
 
