@@ -18,6 +18,7 @@ GitHub fork：`wahaha232/Metrolist`
 - 尚未完成：實體藍牙耳機手動測試、正式簽章、版本號 bump、dist 打包與文件更新。
 - **注意**：目前 release APK 是 **Android Debug** 簽章，版本仍是 13.7.0 (153)，不可直接當正式版發佈。
 - 下一步測試腳本：`scripts/kilo_release_checks.ps1`（Windows + adb，含實體耳機 checklist）。
+- 測試需知（另一台電腦接續）：`scripts/KILO_TEST_GUIDE.md`。
 
 ---
 
@@ -126,6 +127,9 @@ GitHub fork：`wahaha232/Metrolist`
 ### 一鍵測試腳本（不需要 Kilo）
 
 **新的 release 驗收腳本**：`scripts/kilo_release_checks.ps1` + `scripts/run_kilo_release_checks.bat`
+
+完整測試需知（需求、參數、疑難排解、回報格式）：[`scripts/KILO_TEST_GUIDE.md`](scripts/KILO_TEST_GUIDE.md)
+
 - Release gate：APK 存在、SHA-256、applicationId、版本、簽章（debug key 會 FAIL，除非 `-AllowDebugSignature`）。
 - Release 安裝 / 啟動 / 「耳機控制」頁面。
 - 250ms / 700ms 點擊視窗邊界（約 350ms 間隔）。
